@@ -468,33 +468,102 @@ function downloadCSV() {
 }
 
 function addRandomStains() {
-    // Add 3-6 random coffee rings
-    const numStains = 3 + Math.floor(Math.random() * 4);
+    // Generate realistic "Organic" SVG Coffee Rings
+    const numStains = 3 + Math.floor(Math.random() * 3);
+
+    // Coffee Colors
+    const darkest = "#3e2723";
+    const dark = "#5d4037";
+    const light = "#795548";
 
     for (let i = 0; i < numStains; i++) {
-        const stain = document.createElement('div');
-        stain.classList.add('coffee-stain-random');
+        const size = 200 + Math.random() * 150; // Large
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, "svg");
 
-        // Random size (rings are usually smaller than big blotches)
-        const size = 80 + Math.random() * 120;
-        stain.style.width = `${size}px`;
-        stain.style.height = `${size}px`;
+        svg.setAttribute("width", size);
+        svg.setAttribute("height", size);
+        svg.setAttribute("viewBox", "0 0 100 100");
+        svg.style.position = "fixed";
+        svg.style.top = `${Math.random() * 90}vh`;
+        svg.style.left = `${Math.random() * 90}vw`;
+        svg.style.pointerEvents = "none";
+        svg.style.zIndex = "9999";
+        svg.style.transform = `rotate(${Math.random() * 360}deg)`;
+        svg.style.mixBlendMode = "multiply";
+        svg.style.opacity = "0.85";
 
-        // Random position
-        stain.style.top = `${Math.random() * 90}vh`;
-        stain.style.left = `${Math.random() * 90}vw`;
+        // --- 1. Base Wash (Faint, wide) ---
+        const pathBase = document.createElementNS(svgNS, "path");
+        const points = [];
+        const segments = 20;
 
-        // Random Rotation
-        stain.style.transform = `rotate(${Math.random() * 360}deg)`;
+        // Generate irregular circle points
+        for (let j = 0; j <= segments; j++) {
+            const angle = (j / segments) * Math.PI * 2;
+            const r = 40 + (Math.random() * 3 - 1.5); // Slight wobble
+            const x = 50 + Math.cos(angle) * r;
+            const y = 50 + Math.sin(angle) * r;
+            points.push({ x, y });
+        }
 
-        // Random irregularity per stain
-        const r1 = 40 + Math.random() * 20;
-        const r2 = 40 + Math.random() * 20;
-        const r3 = 40 + Math.random() * 20;
-        const r4 = 40 + Math.random() * 20;
-        stain.style.borderRadius = `${r1}% ${100 - r1}% ${r3}% ${100 - r3}% / ${r2}% ${r4}% ${100 - r4}% ${100 - r2}%`;
+        // Construct Path "d"
+        let d = `M ${points[0].x} ${points[0].y} `;
+        for (let j = 1; j < points.length; j++) {
+            d += `L ${points[j].x} ${points[j].y} `;
+        }
+        d += "Z";
 
-        document.body.appendChild(stain);
+        pathBase.setAttribute("d", d);
+        pathBase.setAttribute("fill", "none");
+        pathBase.setAttribute("stroke", light);
+        pathBase.setAttribute("stroke-width", "8"); // Wide wash
+        pathBase.setAttribute("stroke-opacity", "0.15");
+        pathBase.style.filter = "blur(2px)";
+        svg.appendChild(pathBase);
+
+        // --- 2. The "Rim" (Darker, thinner, broken) ---
+        const pathRim = document.createElementNS(svgNS, "path");
+        pathRim.setAttribute("d", d);
+        pathRim.setAttribute("fill", "none");
+        pathRim.setAttribute("stroke", dark);
+        pathRim.setAttribute("stroke-width", "2");
+        pathRim.setAttribute("stroke-opacity", "0.7");
+        pathRim.setAttribute("stroke-linecap", "round");
+        // Random breaks in the rim
+        const dash1 = 50 + Math.random() * 100;
+        const gap1 = 10 + Math.random() * 50;
+        pathRim.setAttribute("stroke-dasharray", `${dash1} ${gap1} ${dash1 / 2} ${gap1 / 2}`);
+        svg.appendChild(pathRim);
+
+        // --- 3. The "Crust" (Very dark edge, fine line) ---
+        const pathCrust = document.createElementNS(svgNS, "path");
+        pathCrust.setAttribute("d", d);
+        pathCrust.setAttribute("fill", "none");
+        pathCrust.setAttribute("stroke", darkest);
+        pathCrust.setAttribute("stroke-width", "0.5");
+        pathCrust.setAttribute("stroke-opacity", "0.9");
+        // More breaks
+        pathCrust.setAttribute("stroke-dasharray", `${dash1} ${gap1 + 5} ${dash1 / 2} ${gap1 / 2 + 5}`);
+        svg.appendChild(pathCrust);
+
+        // --- 4. Splatters ---
+        const numSplatters = 3 + Math.floor(Math.random() * 5);
+        for (let k = 0; k < numSplatters; k++) {
+            const dot = document.createElementNS(svgNS, "circle");
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 43 + Math.random() * 10; // Outside the ring
+            const r = 0.5 + Math.random() * 1.5;
+
+            dot.setAttribute("cx", 50 + Math.cos(angle) * dist);
+            dot.setAttribute("cy", 50 + Math.sin(angle) * dist);
+            dot.setAttribute("r", r);
+            dot.setAttribute("fill", dark);
+            dot.setAttribute("opacity", "0.6");
+            svg.appendChild(dot);
+        }
+
+        document.body.appendChild(svg);
     }
 }
 
