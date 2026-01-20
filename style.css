@@ -196,19 +196,21 @@ button#log-supply-btn {
     background: none;
 }
 
-/* Coffee Stain */
-.coffee-stain-corner {
-    position: fixed;
-    top: -50px;
-    right: -50px;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, transparent 40%, var(--stain-color) 45%, var(--stain-color) 55%, transparent 60%);
-    border-radius: 50%;
-    filter: blur(2px);
-    pointer-events: none;
-    z-index: 10;
-    opacity: 0.6;
+
+
+/* GitHub Corner Link */
+.github-corner {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    opacity: 0.3;
+    transition: opacity 0.3s;
+    z-index: 50;
+    /* Ensure it's above other elements but below modal */
+}
+
+.github-corner:hover {
+    opacity: 1;
 }
 
 /* Modal */
@@ -261,33 +263,7 @@ button#log-supply-btn {
     margin: 10px 0;
 }
 
-/* Random Stains (Coffee Rings) */
-.coffee-stain-random {
-    position: fixed;
-    pointer-events: none;
-    z-index: 9999;
-    /* Create a hollow ring */
-    background: radial-gradient(closest-side, transparent 75%, var(--stain-color) 85%, var(--stain-color) 100%, transparent);
-    /* Irregular shape */
-    border-radius: 55% 45% 60% 40% / 50% 60% 40% 50%;
-    opacity: 0.8;
-    mix-blend-mode: multiply;
-    transform: rotate(random(360deg));
-    /* Note: CSS doesn't support random() directly, handled in JS */
-}
 
-/* Add a second variation for filled blotches if needed, or just rings */
-.coffee-stain-random::after {
-    content: '';
-    display: block;
-    width: 100%;
-    height: 100%;
-    /* Subtle splatter texture */
-    background-image: radial-gradient(var(--stain-color) 1px, transparent 1px);
-    background-size: 10px 10px;
-    opacity: 0.3;
-    border-radius: inherit;
-}
 
 /* Mobile Adjustments */
 @media (max-width: 400px) {
