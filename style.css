@@ -1,0 +1,225 @@
+:root {
+    --paper-bg: #fdfbf7;
+    --ink-color: #2c2c2c;
+    --line-color: #a4b0be;
+    --highlight: #c0392b;
+    --stain-color: rgba(121, 85, 72, 0.15);
+    --font-heading: 'Special Elite', cursive;
+    --font-body: 'Courier Prime', monospace;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--paper-bg);
+    color: var(--ink-color);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    background-image: 
+        linear-gradient(var(--article-line-color) 1px, transparent 1px);
+    background-size: 100% 1.5rem;
+}
+
+/* Paper Texture and Lines */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: repeating-linear-gradient(
+        transparent,
+        transparent 23px,
+        #e5e5e5 24px
+    );
+    pointer-events: none;
+    z-index: -1;
+}
+
+.container {
+    width: 100%;
+    max-width: 480px; /* Mobile first */
+    padding: 20px;
+    background: rgba(253, 251, 247, 0.9); /* Slightly opaque to readability over lines */
+    min-height: 100vh;
+    position: relative;
+    border-right: 1px dashed #ccc;
+    border-left: 1px dashed #ccc;
+}
+
+/* Typography */
+h1 {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-bottom: 3px double var(--ink-color);
+    padding-bottom: 10px;
+}
+
+.subtitle {
+    text-align: center;
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-top: 0;
+    margin-bottom: 30px;
+}
+
+h2 {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    border-bottom: 1px solid var(--ink-color);
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+}
+
+/* UI Components */
+.hidden {
+    display: none;
+}
+
+.btn-primary, .btn-secondary, .btn-small, .btn-outline, .btn-link {
+    font-family: var(--font-body);
+    cursor: pointer;
+    border: 2px solid var(--ink-color);
+    background: transparent;
+    color: var(--ink-color);
+    transition: all 0.2s;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.btn-primary:hover, .btn-secondary:hover {
+    background: var(--ink-color);
+    color: var(--paper-bg);
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 20px;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 3px 3px 0px rgba(0,0,0,0.1);
+}
+
+.btn-primary:active {
+    box-shadow: none;
+    transform: translate(2px, 2px);
+}
+
+.icon {
+    font-size: 2rem;
+    margin-bottom: 5px;
+}
+
+.input-group {
+    border: 2px solid var(--ink-color);
+    padding: 15px;
+    margin-bottom: 20px;
+    background: #fff;
+    transform: rotate(-1deg);
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+input[type="number"], input[type="text"], select {
+    width: 100%;
+    padding: 10px;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    background: #fafafa;
+    border-radius: 0;
+    margin-bottom: 10px;
+}
+
+button#log-supply-btn {
+    width: 100%;
+    padding: 10px;
+}
+
+.stats-card {
+    border: 2px solid var(--ink-color);
+    padding: 15px;
+    margin-bottom: 30px;
+    background: #fff;
+    box-shadow: 5px 5px 0px rgba(0,0,0,0.05);
+    transform: rotate(1deg);
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.highlight {
+    font-weight: bold;
+    color: var(--highlight);
+}
+
+.debt {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.export-section {
+    text-align: center;
+    margin-top: 40px;
+    border-top: 1px dashed #ccc;
+    padding-top: 20px;
+}
+
+.btn-link {
+    border: none;
+    text-decoration: underline;
+    font-size: 0.9rem;
+    background: none;
+    color: #555;
+}
+
+.btn-link:hover {
+    color: #000;
+    background: none;
+}
+
+/* Coffee Stain */
+.coffee-stain-corner {
+    position: fixed;
+    top: -50px;
+    right: -50px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, transparent 40%, var(--stain-color) 45%, var(--stain-color) 55%, transparent 60%);
+    border-radius: 50%;
+    filter: blur(2px);
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.6;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 400px) {
+    h1 {
+        font-size: 2rem;
+    }
+}

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CREAF Coffee</title>
+
+    <!-- Google Fonts: Courier Prime and Special Elite -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap"
+        rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
+</head>
+
+<body>
+
+    <!-- Coffee Stain Top Right -->
+    <div class="coffee-stain-corner"></div>
+
+    <div class="container">
+        <header>
+            <h1>CREAF Coffee</h1>
+            <p class="subtitle">Dept. Log No. #2024-C</p>
+        </header>
+
+        <section id="user-auth-section">
+            <label for="user-select">OFFICER ON DECK:</label>
+            <div class="select-wrapper">
+                <select id="user-select">
+                    <option value="" disabled selected>-- IDENTIFY YOURSELF --</option>
+                    <!-- Users will be populated here -->
+                </select>
+            </div>
+            <div id="new-user-container">
+                <input type="text" id="new-user-input" placeholder="New Recruit Name" style="display:none;">
+                <button id="add-user-btn" class="btn-small">[ + NEW RECRUIT ]</button>
+            </div>
+        </section>
+
+        <section id="dashboard" class="hidden">
+            <div class="stats-card">
+                <h2>CURRENT METRICS</h2>
+                <div class="stat-row">
+                    <span>PRICE / CUP:</span>
+                    <span id="price-display" class="highlight">CALCULATING...</span>
+                </div>
+                <div class="stat-row">
+                    <span>YOUR DEBT:</span>
+                    <span id="user-debt-display" class="debt">€0.00</span>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="drink-btn" class="btn-primary">
+                    <span class="icon">☕</span>
+                    <span class="text">DRINK COFFEE<br><small>[ +1 CUP ]</small></span>
+                </button>
+
+                <div class="secondary-actions">
+                    <div class="input-group">
+                        <label>SUPPLY CREDIT (€)</label>
+                        <input type="number" id="supply-amount" step="0.01" placeholder="0.00">
+                        <button id="log-supply-btn" class="btn-secondary">[ LOG SUPPLIES ]</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settle-section">
+                <button id="settle-btn" class="btn-outline">[ SETTLE UP / STATUS ]</button>
+            </div>
+
+            <div class="export-section">
+                <button id="download-csv-btn" class="btn-link">[ DOWNLOAD DATASET.csv ]</button>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

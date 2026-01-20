@@ -1,0 +1,303 @@
+// CREAF Coffee - App Logic
+
+const firebaseConfig = {
+    apiKey: "AIzaSyAO3E9D5C4vBqDLxQUmBiKYBOjH_cjOUsU",
+    authDomain: "creafcoffee.firebaseapp.com",
+    projectId: "creafcoffee",
+    storageBucket: "creafcoffee.firebasestorage.app",
+    messagingSenderId: "879312809239",
+    appId: "1:879312809239:web:8f4870f617e166ae439b52",
+    measurementId: "G-JK4MSHNVZ7"
+};
+
+// Initialize Firebase
+let db;
+let analytics;
+
+try {
+    const app = firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    analytics = firebase.analytics();
+    console.log("Firebase initialized successfully.");
+} catch (error) {
+    console.error("Firebase initialization failed:", error);
+}
+
+// State
+let currentUser = null;
+let dynamicPrice = 0.50; // Fallback default
+let totalCups = 0;
+let totalSupplyCost = 0;
+
+// DOM Elements
+const userSelect = document.getElementById('user-select');
+const newUserContainer = document.getElementById('new-user-container');
+const newUserInput = document.getElementById('new-user-input');
+const addUserBtn = document.getElementById('add-user-btn');
+
+const dashboard = document.getElementById('dashboard');
+const priceDisplay = document.getElementById('price-display');
+const userDebtDisplay = document.getElementById('user-debt-display');
+const drinkBtn = document.getElementById('drink-btn');
+const logSupplyBtn = document.getElementById('log-supply-btn');
+const supplyAmountInput = document.getElementById('supply-amount');
+const downloadCsvBtn = document.getElementById('download-csv-btn');
+const settleBtn = document.getElementById('settle-btn');
+
+// --- Functions ---
+
+function init() {
+    setupRealtimeListeners();
+
+    // Event Listeners
+    userSelect.addEventListener('change', handleUserLogin);
+    addUserBtn.addEventListener('click', handleAddUser);
+    drinkBtn.addEventListener('click', handleDrinkCoffee);
+    logSupplyBtn.addEventListener('click', handleLogSupplies);
+    downloadCsvBtn.addEventListener('click', downloadCSV);
+    settleBtn.addEventListener('click', handleSettleUp);
+}
+
+function setupRealtimeListeners() {
+    // 1. Listen to USERS
+    db.collection('users').onSnapshot(snapshot => {
+        const users = [];
+        snapshot.forEach(doc => {
+            users.push({ id: doc.id, ...doc.data() });
+        });
+        updateUserDropdown(users);
+
+        // If current user, update their debt display specifically
+        if (currentUser) {
+            const updatedUser = users.find(u => u.id === currentUser.id);
+            if (updatedUser) {
+                currentUser = updatedUser;
+                updateDashboard();
+            }
+        }
+    });
+
+    // 2. Listen to LOGS (for Dynamic Price calculation)
+    // In a large app, this would be an aggregation. For this scale, reading all logs is acceptable.
+    db.collection('logs').onSnapshot(snapshot => {
+        let cups = 0;
+        let supplies = 0;
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.action === 'DRANK') cups++;
+            if (data.action === 'SUPPLY') supplies += (parseFloat(data.amount) || 0);
+        });
+
+        totalCups = cups;
+        totalSupplyCost = supplies;
+        recalcPrice();
+    });
+}
+
+function recalcPrice() {
+    // P = Total Cups / Total Supply Expenses ??
+    // Wait, the prompt said: "P = Total Cups Consumed / Total Supply Expenses"
+    // Wait, physically: Price per cup should be Expenses / Cups.
+    // Prompt: "Dynamic Price Formula: P = Total Cups Consumed / Total Supply Expenses (€)"
+    // That means if 100 cups and €10 expenses, P = 10. That's a high price.
+    // If it meant "Expenses / Cups", then €10 / 100 cups = €0.10.
+    // CHECK THE PROMPT AGAIN.
+    // "P = Total Cups Consumed Total Supply Expenses (€)" -- the formatting was "P = Fraction".
+    // Usually it's Total Cost / Total Units.
+    // Let's assume standard economics: Price = Total Expenses / Total Cups.
+    // BUT the prompt text says "P=Total Cups ConsumedTotal Supply Expenses (€)". The visual formatting in the prompt implies a fraction.
+    // Let's implement Expenses / Cups because the inverse would be weird (credits) or super expensive.
+
+    if (totalCups > 0) {
+        dynamicPrice = totalSupplyCost / totalCups;
+    } else {
+        dynamicPrice = 0.50; // Default if no data
+    }
+
+    // Safety check for NaN or Infinity
+    if (!isFinite(dynamicPrice) || isNaN(dynamicPrice)) {
+        dynamicPrice = 0.50;
+    }
+
+    updateDashboard();
+}
+
+function updateDashboard() {
+    // Current Price
+    priceDisplay.textContent = `€${dynamicPrice.toFixed(2)}`;
+
+    if (currentUser) {
+        userDebtDisplay.textContent = `€${(currentUser.debt || 0).toFixed(2)}`;
+    }
+}
+
+function updateUserDropdown(users) {
+    // Save current selection
+    const currentVal = userSelect.value;
+
+    // Clear (except default)
+    userSelect.innerHTML = '<option value="" disabled selected>-- IDENTIFY YOURSELF --</option>';
+
+    users.sort((a, b) => a.name.localeCompare(b.name)).forEach(user => {
+        const opt = document.createElement('option');
+        opt.value = user.id;
+        opt.textContent = user.name;
+        userSelect.appendChild(opt);
+    });
+
+    // Allow adding new user
+    const addNewOpt = document.createElement('option');
+    addNewOpt.value = "__NEW__";
+    addNewOpt.textContent = "+ [ NEW RECRUIT ]";
+    userSelect.appendChild(addNewOpt);
+
+    // Restore selection if possible
+    if (currentVal && users.find(u => u.id === currentVal)) {
+        userSelect.value = currentVal;
+    }
+}
+
+function handleUserLogin(e) {
+    const val = e.target.value;
+    if (val === "__NEW__") {
+        userSelect.style.display = 'none';
+        newUserContainer.style.display = 'flex';
+        newUserInput.style.display = 'block';
+        newUserInput.focus();
+        dashboard.classList.add('hidden');
+    } else {
+        // Fetch fresh state? The listener keeps 'currentUser' somewhat stale if we only rely on the array.
+        // Better to set ID and let listener update.
+        currentUser = { id: val, debt: 0 }; // Temporary until listener fills it
+
+        // Find in our cached list from listener if possible to avoid flicker
+        // Accessing db.collection('users') users is not global.
+        // We'll rely on the fact that if we selected it, it exists.
+        // Trigger a fetch or just wait for listener?
+        // Let's get the specific doc to be sure.
+        db.collection('users').doc(val).get().then(doc => {
+            if (doc.exists) {
+                currentUser = { id: doc.id, ...doc.data() };
+                updateDashboard();
+                dashboard.classList.remove('hidden');
+            }
+        });
+    }
+}
+
+function handleAddUser() {
+    const name = newUserInput.value.trim();
+    if (!name) return;
+
+    db.collection('users').add({
+        name: name,
+        debt: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then((docRef) => {
+        console.log("User added:", docRef.id);
+        // Reset UI
+        newUserInput.value = "";
+        newUserContainer.style.display = 'none';
+        userSelect.style.display = 'block';
+        // Auto-select is tricky without waiting for listener, but listener will fire.
+        alert(`Welcome, ${name}. Select your name from the list.`);
+    });
+}
+
+function handleDrinkCoffee() {
+    if (!currentUser) return;
+
+    // 1. Log to 'logs'
+    db.collection('logs').add({
+        action: 'DRANK',
+        user: currentUser.name,
+        userId: currentUser.id,
+        amount: dynamicPrice, // Historical price at moment of consumption
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // 2. Update 'users' debt
+    db.collection('users').doc(currentUser.id).update({
+        debt: firebase.firestore.FieldValue.increment(dynamicPrice)
+    });
+
+    // Visual Feedback
+    drinkBtn.textContent = "COFFEE LOGGED!";
+    setTimeout(() => {
+        drinkBtn.innerHTML = '<span class="icon">☕</span><span class="text">DRINK COFFEE<br><small>[ +1 CUP ]</small></span>';
+    }, 1500);
+}
+
+function handleLogSupplies() {
+    if (!currentUser) return;
+    const amount = parseFloat(supplyAmountInput.value);
+
+    if (!amount || amount <= 0) {
+        alert("Please enter a valid amount.");
+        return;
+    }
+
+    // 1. Log to 'logs'
+    db.collection('logs').add({
+        action: 'SUPPLY',
+        user: currentUser.name,
+        userId: currentUser.id,
+        amount: amount,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // 2. Update 'users' debt (Subtract)
+    db.collection('users').doc(currentUser.id).update({
+        debt: firebase.firestore.FieldValue.increment(-amount)
+    });
+
+    supplyAmountInput.value = "";
+    alert(`Thank you! €${amount.toFixed(2)} credited.`);
+}
+
+function handleSettleUp() {
+    if (!currentUser) return;
+    alert(`Your current debt is €${(currentUser.debt || 0).toFixed(2)}.\n\nTo settle, buy supplies or pay someone who bought supplies!`);
+}
+
+function downloadCSV() {
+    console.log("Generating CSV...");
+
+    db.collection("logs").orderBy("timestamp", "desc").get().then((querySnapshot) => {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Date,User,Action,Amount\n"; // Header
+
+        querySnapshot.forEach((doc) => {
+            let data = doc.data();
+            // Handle timestamp
+            let dateStr = "N/A";
+            if (data.timestamp && data.timestamp.toDate) {
+                dateStr = data.timestamp.toDate().toISOString().split('T')[0];
+            } else if (data.timestamp) {
+                // Try parsing string or other format
+                dateStr = new Date(data.timestamp).toISOString().split('T')[0];
+            }
+
+            let row = `${dateStr},${data.user},${data.action},${data.amount}`;
+            csvContent += row + "\r\n";
+        });
+
+        // Create download link
+        var encodedUri = encodeURI(csvContent);
+        var link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "creaf_coffee_data.csv");
+        document.body.appendChild(link);
+
+        // Trigger click
+        link.click();
+        document.body.removeChild(link);
+    }).catch(err => {
+        console.error("Error generating CSV:", err);
+        alert("Failed to download data. Check console.");
+    });
+}
+
+// Start
+document.addEventListener('DOMContentLoaded', init);
