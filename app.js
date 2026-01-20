@@ -550,13 +550,16 @@ function addRandomStains() {
         'images/stain_ring_light.png',
         'images/stain_ring_broken.png',
         'images/stain_ring_messy.png',
-        'images/stain_smudge_light.png',
+        // 'images/stain_smudge_light.png', // Removed: corners
         'images/stain_individual_1.png',
         'images/stain_individual_2.png',
         // New clean variations
         'images/stain_cup_ring_clean.png',
         'images/stain_drip_long.png',
-        'images/stain_splash_tiny.png'
+        'images/stain_splash_tiny.png',
+        // Newest high-quality assets
+        'images/stain_ring_perfect.png',
+        'images/stain_drip_clean.png'
     ];
 
     // Reduced count: 2 to 3 stains
