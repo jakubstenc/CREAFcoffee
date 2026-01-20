@@ -1,9 +1,9 @@
 :root {
-    --paper-bg: #fdfbf7;
+    --paper-bg: #fdf6e4;
     --ink-color: #2c2c2c;
     --line-color: #a4b0be;
     --highlight: #c0392b;
-    --stain-color: rgba(121, 85, 72, 0.15);
+    --stain-color: rgba(101, 67, 33, 0.12);
     --font-heading: 'Special Elite', cursive;
     --font-body: 'Courier Prime', monospace;
 }
@@ -278,6 +278,17 @@ button#log-supply-btn {
     max-width: 100%;
     border: 2px solid var(--ink-color);
     margin: 10px 0;
+}
+
+/* Random Stains */
+.coffee-stain-random {
+    position: fixed;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--stain-color) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+    filter: blur(5px);
+    opacity: 0.8;
 }
 
 /* Mobile Adjustments */

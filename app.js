@@ -52,6 +52,7 @@ const closeModal = document.querySelector('.close-modal');
 
 function init() {
     setupRealtimeListeners();
+    addRandomStains(); // Add visual flair
 
     // Event Listeners
     userSelect.addEventListener('change', handleUserLogin);
@@ -172,11 +173,7 @@ function updateUserDropdown(users) {
 function handleUserLogin(e) {
     const val = e.target.value;
     if (val === "__NEW__") {
-        userSelect.style.display = 'none';
-        newUserContainer.style.display = 'flex';
-        newUserInput.style.display = 'block';
-        newUserInput.focus();
-        dashboard.classList.add('hidden');
+        enterNewUserMode();
     } else {
         // Use cached user data
         const selectedUser = allUsers.find(u => u.id === val);
@@ -191,9 +188,26 @@ function handleUserLogin(e) {
     }
 }
 
+function enterNewUserMode() {
+    userSelect.style.display = 'none';
+    newUserInput.style.display = 'block';
+    newUserInput.focus();
+    dashboard.classList.add('hidden');
+    addUserBtn.textContent = "[ CONFIRM RECRUIT ]";
+}
+
 function handleAddUser() {
+    // If input is hidden (or we are not in add mode), switch to add mode
+    if (newUserInput.style.display === 'none' || newUserInput.style.display === '') {
+        enterNewUserMode();
+        return;
+    }
+
     const name = newUserInput.value.trim();
-    if (!name) return;
+    if (!name) {
+        alert("Please enter a name.");
+        return;
+    }
 
     db.collection('users').add({
         name: name,
@@ -203,9 +217,9 @@ function handleAddUser() {
         console.log("User added:", docRef.id);
         // Reset UI
         newUserInput.value = "";
-        newUserContainer.style.display = 'none';
+        newUserInput.style.display = 'none';
         userSelect.style.display = 'block';
-        // Auto-select is tricky without waiting for listener, but listener will fire.
+        addUserBtn.textContent = "[ + NEW RECRUIT ]";
         alert(`Welcome, ${name}. Select your name from the list.`);
     });
 }
@@ -302,6 +316,30 @@ function downloadCSV() {
         console.error("Error generating CSV:", err);
         alert("Failed to download data. Check console.");
     });
+}
+
+function addRandomStains() {
+    // Add 2-5 random circular stains
+    const numStains = 2 + Math.floor(Math.random() * 4);
+
+    for (let i = 0; i < numStains; i++) {
+        const stain = document.createElement('div');
+        stain.classList.add('coffee-stain-random');
+
+        // Random size
+        const size = 150 + Math.random() * 200;
+        stain.style.width = `${size}px`;
+        stain.style.height = `${size}px`;
+
+        // Random position (avoid center if possible, but random is random)
+        stain.style.top = `${Math.random() * 100}vh`;
+        stain.style.left = `${Math.random() * 100}vw`;
+
+        // Random irregularity
+        stain.style.borderRadius = `${40 + Math.random() * 20}% ${40 + Math.random() * 20}% ${40 + Math.random() * 20}% ${40 + Math.random() * 20}%`;
+
+        document.body.appendChild(stain);
+    }
 }
 
 // Start
