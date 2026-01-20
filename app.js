@@ -545,7 +545,8 @@ function downloadCSV() {
 }
 
 function addRandomStains() {
-    // Generate realistic "Organic" SVG Coffee Rings
+    // Generate realistic "Organic" SVG Coffee Rings (Bezier Smoothed)
+    // Simulating the look of the 'coffee-stains' LaTeX package
     const numStains = 3 + Math.floor(Math.random() * 3);
 
     // Coffee Colors
@@ -554,7 +555,7 @@ function addRandomStains() {
     const light = "#795548";
 
     for (let i = 0; i < numStains; i++) {
-        const size = 200 + Math.random() * 150; // Large
+        const size = 220 + Math.random() * 140;
         const svgNS = "http://www.w3.org/2000/svg";
         const svg = document.createElementNS(svgNS, "svg");
 
@@ -568,76 +569,89 @@ function addRandomStains() {
         svg.style.zIndex = "9999";
         svg.style.transform = `rotate(${Math.random() * 360}deg)`;
         svg.style.mixBlendMode = "multiply";
-        svg.style.opacity = "0.85";
+        svg.style.opacity = "0.9";
 
-        // --- 1. Base Wash (Faint, wide) ---
-        const pathBase = document.createElementNS(svgNS, "path");
+        // --- Generate Organic Shape using Bezier Curves ---
+        // Instead of jagged lines, we use smooth control points
         const points = [];
-        const segments = 20;
+        const segments = 12; // Fewer segments = smoother loop
+        const baseRadius = 40;
 
-        // Generate irregular circle points
-        for (let j = 0; j <= segments; j++) {
+        for (let j = 0; j < segments; j++) {
             const angle = (j / segments) * Math.PI * 2;
-            const r = 40 + (Math.random() * 3 - 1.5); // Slight wobble
+            const r = baseRadius + (Math.random() * 4 - 2); // Subtle wobble
             const x = 50 + Math.cos(angle) * r;
             const y = 50 + Math.sin(angle) * r;
             points.push({ x, y });
         }
 
-        // Construct Path "d"
+        // Close the loop
+        points.push(points[0]);
+
+        // Catmull-Rom spline to Bezier conversion for smoothness
         let d = `M ${points[0].x} ${points[0].y} `;
-        for (let j = 1; j < points.length; j++) {
-            d += `L ${points[j].x} ${points[j].y} `;
+        for (let j = 0; j < points.length - 1; j++) {
+            const p0 = points[j == 0 ? points.length - 2 : j - 1];
+            const p1 = points[j];
+            const p2 = points[j + 1];
+            const p3 = points[j + 2 == points.length ? 1 : j + 2];
+
+            // Catmull-Rom to Cubic Bezier
+            const cp1x = p1.x + (p2.x - p0.x) / 6;
+            const cp1y = p1.y + (p2.y - p0.y) / 6;
+            const cp2x = p2.x - (p3.x - p1.x) / 6;
+            const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+            d += `C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y} `;
         }
-        d += "Z";
 
-        pathBase.setAttribute("d", d);
-        pathBase.setAttribute("fill", "none");
-        pathBase.setAttribute("stroke", light);
-        pathBase.setAttribute("stroke-width", "8"); // Wide wash
-        pathBase.setAttribute("stroke-opacity", "0.15");
-        pathBase.style.filter = "blur(2px)";
-        svg.appendChild(pathBase);
-
-        // --- 2. The "Rim" (Darker, thinner, broken) ---
-        const pathRim = document.createElementNS(svgNS, "path");
-        pathRim.setAttribute("d", d);
-        pathRim.setAttribute("fill", "none");
-        pathRim.setAttribute("stroke", dark);
-        pathRim.setAttribute("stroke-width", "2");
-        pathRim.setAttribute("stroke-opacity", "0.7");
-        pathRim.setAttribute("stroke-linecap", "round");
-        // Random breaks in the rim
-        const dash1 = 50 + Math.random() * 100;
-        const gap1 = 10 + Math.random() * 50;
-        pathRim.setAttribute("stroke-dasharray", `${dash1} ${gap1} ${dash1 / 2} ${gap1 / 2}`);
-        svg.appendChild(pathRim);
-
-        // --- 3. The "Crust" (Very dark edge, fine line) ---
+        // --- Layer 1: The "Crust" (Sharp, dark, thin edge) ---
         const pathCrust = document.createElementNS(svgNS, "path");
         pathCrust.setAttribute("d", d);
         pathCrust.setAttribute("fill", "none");
         pathCrust.setAttribute("stroke", darkest);
-        pathCrust.setAttribute("stroke-width", "0.5");
-        pathCrust.setAttribute("stroke-opacity", "0.9");
-        // More breaks
-        pathCrust.setAttribute("stroke-dasharray", `${dash1} ${gap1 + 5} ${dash1 / 2} ${gap1 / 2 + 5}`);
+        pathCrust.setAttribute("stroke-width", "1.5");
+        pathCrust.setAttribute("stroke-opacity", "0.95");
+        pathCrust.setAttribute("stroke-linecap", "round");
+        // Natural breaks (capillary effect breaks)
+        const dashBase = 100 + Math.random() * 100;
+        pathCrust.setAttribute("stroke-dasharray", `${dashBase} ${10 + Math.random() * 20} ${dashBase / 2} ${5 + Math.random() * 10}`);
         svg.appendChild(pathCrust);
 
-        // --- 4. Splatters ---
-        const numSplatters = 3 + Math.floor(Math.random() * 5);
-        for (let k = 0; k < numSplatters; k++) {
-            const dot = document.createElementNS(svgNS, "circle");
-            const angle = Math.random() * Math.PI * 2;
-            const dist = 43 + Math.random() * 10; // Outside the ring
-            const r = 0.5 + Math.random() * 1.5;
+        // --- Layer 2: The "Wash" (Bleeding edge) ---
+        // Clone the path but make it wider and lighter
+        const pathWash = document.createElementNS(svgNS, "path");
+        pathWash.setAttribute("d", d);
+        pathWash.setAttribute("fill", "none");
+        pathWash.setAttribute("stroke", dark);
+        pathWash.setAttribute("stroke-width", "4"); // Bleed out
+        pathWash.setAttribute("stroke-opacity", "0.3");
+        pathWash.style.filter = "blur(1px)";
+        svg.appendChild(pathWash);
 
-            dot.setAttribute("cx", 50 + Math.cos(angle) * dist);
-            dot.setAttribute("cy", 50 + Math.sin(angle) * dist);
-            dot.setAttribute("r", r);
-            dot.setAttribute("fill", dark);
-            dot.setAttribute("opacity", "0.6");
-            svg.appendChild(dot);
+        // --- Layer 3: Inner Stain (The liquid residue) ---
+        // Fill slightly with a gradient or tint
+        const pathFill = document.createElementNS(svgNS, "path");
+        pathFill.setAttribute("d", d);
+        pathFill.setAttribute("fill", light);
+        pathFill.setAttribute("fill-opacity", "0.05"); // Very faint fill
+        pathFill.setAttribute("stroke", "none");
+        svg.appendChild(pathFill);
+
+        // --- Layer 4: Random "Drips" on the ring ---
+        // Add a globule on the ring path itself
+        const numDrips = 1 + Math.floor(Math.random() * 3);
+        for (let k = 0; k < numDrips; k++) {
+            const dripIdx = Math.floor(Math.random() * (points.length - 2));
+            const p = points[dripIdx];
+            const drip = document.createElementNS(svgNS, "circle");
+            drip.setAttribute("cx", p.x + (Math.random() * 2 - 1));
+            drip.setAttribute("cy", p.y + (Math.random() * 2 - 1));
+            drip.setAttribute("r", 2 + Math.random() * 2);
+            drip.setAttribute("fill", darkest);
+            drip.setAttribute("opacity", "0.8");
+            drip.style.filter = "blur(0.5px)";
+            svg.appendChild(drip);
         }
 
         document.body.appendChild(svg);
