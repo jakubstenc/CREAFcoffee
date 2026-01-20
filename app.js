@@ -101,36 +101,41 @@ function showHistoryModal() {
     if (!currentUser) return;
 
     const historyModal = document.getElementById('history-modal');
-    // If modal doesn't exist in HTML, create it dynamically
+    // If modal doesn't exist, create it
     let modal = historyModal;
     if (!modal) {
         modal = document.createElement('div');
         modal.id = 'history-modal';
         modal.className = 'modal hidden';
         modal.innerHTML = `
-            <div class="modal-content" style="max-width: 500px; text-align: left;">
+            <div class="modal-content" style="max-width: 600px; text-align: left;">
                 <span class="close-modal">&times;</span>
                 <h2>Logbook: ${currentUser.name}</h2>
-                <div id="history-list" style="max-height: 300px; overflow-y: auto; font-size: 0.9rem;">Loading...</div>
+                <!-- Chart Container -->
+                <div style="height: 200px; width: 100%; margin-bottom: 20px;">
+                    <canvas id="consumptionChart"></canvas>
+                </div>
+                <h3>Recent Transactions</h3>
+                <div id="history-list" style="max-height: 200px; overflow-y: auto; font-size: 0.9rem;">Loading...</div>
                 <hr>
                 <div style="text-align: right; font-weight: bold;">Current Debt: €${(currentUser.debt || 0).toFixed(2)}</div>
             </div>
         `;
         document.body.appendChild(modal);
 
-        // Re-bind close logic for this new modal
         modal.querySelector('.close-modal').onclick = () => modal.classList.add('hidden');
         modal.onclick = (e) => { if (e.target === modal) modal.classList.add('hidden'); };
     }
 
     modal.classList.remove('hidden');
     const list = modal.querySelector('#history-list');
-    list.innerHTML = "Loading records...";
+    list.innerHTML = "Loading records & generating graph...";
 
+    // Increase limit for graph data
     db.collection('logs')
         .where('userId', '==', currentUser.id)
         .orderBy('timestamp', 'desc')
-        .limit(10)
+        .limit(50)
         .get()
         .then(snapshot => {
             if (snapshot.empty) {
@@ -138,6 +143,79 @@ function showHistoryModal() {
                 return;
             }
 
+            // 1. Process Data for Graph (Group by Date)
+            const dateCounts = {};
+            const labels = [];
+            const dataPoints = [];
+
+            // Initialize last 7 days with 0 (optional, but looks better)
+            for (let d = 6; d >= 0; d--) {
+                const date = new Date();
+                date.setDate(date.getDate() - d);
+                const key = date.toISOString().split('T')[0];
+                dateCounts[key] = 0;
+            }
+
+            // Fill with actual data
+            snapshot.forEach(doc => {
+                const d = doc.data();
+                if (d.action === 'DRANK' && d.timestamp) {
+                    const dateKey = d.timestamp.toDate().toISOString().split('T')[0];
+                    if (dateCounts[dateKey] !== undefined) {
+                        dateCounts[dateKey]++;
+                    } else {
+                        // If older than 7 days and not initialized, just track it if we want full history, 
+                        // but for now let's stick to showing what we caught or add it dynamically
+                        dateCounts[dateKey] = (dateCounts[dateKey] || 0) + 1;
+                    }
+                }
+            });
+
+            // Sort dates
+            Object.keys(dateCounts).sort().forEach(date => {
+                labels.push(date.slice(5)); // MM-DD
+                dataPoints.push(dateCounts[date]);
+            });
+
+            // Render Chart
+            const ctx = document.getElementById('consumptionChart').getContext('2d');
+            // Destroy old chart if exists (to prevent overlay)
+            if (window.myCoffeeChart) window.myCoffeeChart.destroy();
+
+            window.myCoffeeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Cups per Day',
+                        data: dataPoints,
+                        borderColor: '#5d4037', // Coffee Dark
+                        backgroundColor: 'rgba(121, 85, 72, 0.2)', // Coffee Light
+                        borderWidth: 2,
+                        tension: 0.3, // Slight curve
+                        fill: true,
+                        pointBackgroundColor: '#3e2723'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Caffeine Intake Trend' }
+                    }
+                }
+            });
+
+            // 2. Render List (same as before)
             let html = '<ul style="list-style: none; padding: 0;">';
             snapshot.forEach(doc => {
                 const data = doc.data();
@@ -157,10 +235,9 @@ function showHistoryModal() {
         })
         .catch(err => {
             console.error(err);
-            list.innerHTML = "Error loading history. (Requires Index on userId+timestamp)";
-            // Fallback if index missing: just show recent logs from client memory if needed, but error is better info
+            list.innerHTML = "Error: " + err.message;
             if (err.message.includes("index")) {
-                alert("Admin: Please create a Firestore Index for 'logs' (userId ASC, timestamp DESC). Link in console.");
+                alert("Please check console to create the required Index!");
             }
         });
 }
