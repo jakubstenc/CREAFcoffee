@@ -100,6 +100,9 @@ function setupRealtimeListeners() {
         }
     }, error => {
         console.error("Error fetching users:", error);
+        if (error.code === 'permission-denied') {
+            alert("⚠️ SYSTEM ERROR: Permission Denied.\n\nThe app cannot read the user list.\nThis usually means the Firestore Database has not been created or rules block access.\n\nGo to Firebase Console > Build > Firestore Database to enable it.");
+        }
     });
 
     // 2. Listen to LOGS (for Dynamic Price calculation)
