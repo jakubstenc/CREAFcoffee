@@ -57,6 +57,14 @@ function init() {
     // Event Listeners
     userSelect.addEventListener('change', handleUserLogin);
     addUserBtn.addEventListener('click', handleAddUser);
+
+    // UX: Allow pressing Enter to add user
+    newUserInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleAddUser();
+        }
+    });
+
     drinkBtn.addEventListener('click', handleDrinkCoffee);
     logSupplyBtn.addEventListener('click', handleLogSupplies);
     downloadCsvBtn.addEventListener('click', downloadCSV);
@@ -64,9 +72,7 @@ function init() {
 
     // QR Modal Listeners
     if (payQrBtn) {
-        payQrBtn.addEventListener('click', () => {
-            qrModal.classList.remove('hidden');
-        });
+        payQrBtn.addEventListener('click', showPaymentModal);
     }
     if (closeModal) {
         closeModal.addEventListener('click', () => {
@@ -78,6 +84,42 @@ function init() {
             qrModal.classList.add('hidden');
         }
     });
+}
+
+function showPaymentModal() {
+    if (!currentUser) return;
+
+    qrModal.classList.remove('hidden');
+
+    const amount = (currentUser.debt || 0).toFixed(2);
+
+    // EPC-QR Standard for SEPA Transfers
+    // Replace with ACTUAL IBAN and NAME
+    const recipientName = "CREAF COFFEE";
+    const recipientIBAN = "XY0000000000000000000000"; // User must replace this
+    const bic = ""; // Optional
+    const remittanceText = `Coffee Tab ${currentUser.name}`;
+
+    // Construct SEPA QR String
+    // Service Tag | Version | Encoding | TransferType | BIC | Name | IBAN | Amount | Purpose | Ref | Remittance
+    const qrData = `BCD\n002\n1\nSCT\n${bic}\n${recipientName}\n${recipientIBAN}\nEUR${amount}\n\n\n${remittanceText}`;
+
+    // Generate QR
+    const qrImage = document.querySelector('.qr-placeholder img');
+    if (qrImage) {
+        qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrData)}&size=200x200`;
+        qrImage.alt = `Pay €${amount}`;
+    }
+
+    // Update Modal Text if possible
+    let modalText = document.querySelector('.qr-text-info');
+    if (!modalText) {
+        modalText = document.createElement('p');
+        modalText.className = 'qr-text-info';
+        modalText.style.fontWeight = 'bold';
+        document.querySelector('.modal-content').insertBefore(modalText, qrImage);
+    }
+    modalText.innerText = `Scan to Pay: €${amount}`;
 }
 
 function setupRealtimeListeners() {
