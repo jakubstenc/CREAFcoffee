@@ -70,20 +70,99 @@ function init() {
     downloadCsvBtn.addEventListener('click', downloadCSV);
     settleBtn.addEventListener('click', handleSettleUp);
 
+    // History Button (Reusing Settle Btn for "Status / History")
+    settleBtn.innerHTML = "[ MY STATUS / HISTORY ]";
+    settleBtn.removeEventListener('click', handleSettleUp); // Remove old handler
+    settleBtn.addEventListener('click', showHistoryModal);
+
     // QR Modal Listeners
     if (payQrBtn) {
         payQrBtn.addEventListener('click', showPaymentModal);
     }
-    if (closeModal) {
-        closeModal.addEventListener('click', () => {
-            qrModal.classList.add('hidden');
+
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.target.closest('.modal').classList.add('hidden');
         });
-    }
+    });
+
     window.addEventListener('click', (event) => {
-        if (event.target == qrModal) {
-            qrModal.classList.add('hidden');
+        if (event.target.classList.contains('modal')) {
+            event.target.classList.add('hidden');
         }
     });
+}
+
+function showhistoryModal() {
+    // Note: We'll create a new modal for history or reuse the concept
+}
+
+function showHistoryModal() {
+    if (!currentUser) return;
+
+    const historyModal = document.getElementById('history-modal');
+    // If modal doesn't exist in HTML, create it dynamically
+    let modal = historyModal;
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'history-modal';
+        modal.className = 'modal hidden';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px; text-align: left;">
+                <span class="close-modal">&times;</span>
+                <h2>Logbook: ${currentUser.name}</h2>
+                <div id="history-list" style="max-height: 300px; overflow-y: auto; font-size: 0.9rem;">Loading...</div>
+                <hr>
+                <div style="text-align: right; font-weight: bold;">Current Debt: €${(currentUser.debt || 0).toFixed(2)}</div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Re-bind close logic for this new modal
+        modal.querySelector('.close-modal').onclick = () => modal.classList.add('hidden');
+        modal.onclick = (e) => { if (e.target === modal) modal.classList.add('hidden'); };
+    }
+
+    modal.classList.remove('hidden');
+    const list = modal.querySelector('#history-list');
+    list.innerHTML = "Loading records...";
+
+    db.collection('logs')
+        .where('userId', '==', currentUser.id)
+        .orderBy('timestamp', 'desc')
+        .limit(10)
+        .get()
+        .then(snapshot => {
+            if (snapshot.empty) {
+                list.innerHTML = "<p>No records found.</p>";
+                return;
+            }
+
+            let html = '<ul style="list-style: none; padding: 0;">';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const date = data.timestamp ? data.timestamp.toDate().toLocaleString() : 'Just now';
+                const color = data.action === 'SUPPLY' ? 'green' : 'black';
+                const sign = data.action === 'SUPPLY' ? '-' : '+';
+                const icon = data.action === 'SUPPLY' ? '📦' : '☕';
+
+                html += `
+                    <li style="border-bottom: 1px dashed #ccc; padding: 5px 0; color: ${color}">
+                        <strong>${date.split(',')[0]}</strong>: ${icon} ${data.action} <span style="float: right;">${sign}€${data.amount.toFixed(2)}</span>
+                    </li>
+                `;
+            });
+            html += '</ul>';
+            list.innerHTML = html;
+        })
+        .catch(err => {
+            console.error(err);
+            list.innerHTML = "Error loading history. (Requires Index on userId+timestamp)";
+            // Fallback if index missing: just show recent logs from client memory if needed, but error is better info
+            if (err.message.includes("index")) {
+                alert("Admin: Please create a Firestore Index for 'logs' (userId ASC, timestamp DESC). Link in console.");
+            }
+        });
 }
 
 function showPaymentModal() {
