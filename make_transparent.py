@@ -1,34 +1,42 @@
 from PIL import Image
 import os
 import glob
-import math
 
-def distance(c1, c2):
-    (r1, g1, b1) = c1[:3]
-    (r2, g2, b2) = c2[:3]
-    return math.sqrt((r1 - r2)**2 + (g1 - g2)**2 + (b1 - b2)**2)
-
-def remove_background(image_path, tolerance=30):
+def apply_luminance_transparency(image_path):
     try:
-        img = Image.open(image_path)
-        img = img.convert("RGBA")
+        img = Image.open(image_path).convert("RGBA")
         datas = img.getdata()
-        
-        # Sample the top-left pixel as the background color
-        bg_color = datas[0]
         
         new_data = []
         for item in datas:
-            # Check modification: if the pixel is close to the background color -> transparent
-            # Also checking for pure white just in case
-            if distance(item, bg_color) < tolerance or (item[0] > 240 and item[1] > 240 and item[2] > 240):
-                new_data.append((255, 255, 255, 0))
+            r, g, b, a = item
+            
+            # Calculate brightness (Luminance)
+            # Standard formula: 0.299*R + 0.587*G + 0.114*B, but simple average is fine for this
+            brightness = (r + g + b) / 3
+            
+            # INVERT brightness for Alpha
+            # White (255) -> Alpha 0
+            # Black (0) -> Alpha 255
+            # We add a "threshold" to clip near-whites to pure transparency
+            threshold = 20 # Clip anything brighter than 235/255 to fully transparent
+            
+            if brightness > (255 - threshold):
+                new_alpha = 0
             else:
-                new_data.append(item)
+                # Scale the remaining range
+                # The darker the pixel, the more opaque it is.
+                # We multiply by a factor to make the stain distinct
+                new_alpha = int((255 - brightness) * 1.5) 
+                new_alpha = min(new_alpha, 255) # Cap at 255
+            
+            # Keep the original color but use the new Alpha
+            # OPTIONAL: Darken the color slightly to make it look wet
+            new_data.append((r, g, b, new_alpha))
 
         img.putdata(new_data)
         img.save(image_path, "PNG")
-        print(f"Processed: {image_path}")
+        print(f"Processed (Luminance): {image_path}")
     except Exception as e:
         print(f"Failed {image_path}: {e}")
 
@@ -37,4 +45,4 @@ target_dir = "/home/meow/Documents/Antigravity/CREAFcoffee/images"
 files = glob.glob(os.path.join(target_dir, "*.png"))
 
 for f in files:
-    remove_background(f, tolerance=50) # Increased tolerance
+    apply_luminance_transparency(f)
