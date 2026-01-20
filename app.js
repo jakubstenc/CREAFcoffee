@@ -546,20 +546,13 @@ function downloadCSV() {
 
 function addRandomStains() {
     // Add realistic Image-based Coffee Stains
+    // Using only the "Top 5" high-quality, high-contrast assets to avoid artifacts
     const stainImages = [
-        'images/stain_ring_light.png',
-        'images/stain_ring_broken.png',
-        'images/stain_ring_messy.png',
-        // 'images/stain_smudge_light.png', // Removed: corners
-        'images/stain_individual_1.png',
-        'images/stain_individual_2.png',
-        // New clean variations
-        'images/stain_cup_ring_clean.png',
-        'images/stain_drip_long.png',
-        'images/stain_splash_tiny.png',
-        // Newest high-quality assets
-        'images/stain_ring_perfect.png',
-        'images/stain_drip_clean.png'
+        'images/stain_ring_perfect.png', // Best
+        'images/stain_drip_clean.png',   // Best
+        'images/stain_ring_messy.png',   // Good
+        'images/stain_ring_broken.png',  // Good
+        'images/stain_drip_long.png'     // Good
     ];
 
     // Reduced count: 1 to 2 stains (Minimal clutter)
