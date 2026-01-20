@@ -548,33 +548,43 @@ function addRandomStains() {
     // Add realistic Image-based Coffee Stains
     const stainImages = [
         'images/stain_splatter.png',
-        'images/stain_blob.png',
+        // 'images/stain_blob.png', // Removed: too clumped
         'images/stain_ring_light.png',
-        'images/stain_ring_broken.png'
+        'images/stain_ring_broken.png',
+        'images/stain_droplet_1.png',
+        // 'images/stain_droplet_2.png', // Removed: too clumped
+        'images/stain_ring_messy.png',
+        'images/stain_smudge_light.png',
+        // New individual items
+        'images/stain_individual_1.png',
+        'images/stain_individual_2.png',
+        'images/stain_individual_3.png'
     ];
 
-    const numStains = 4 + Math.floor(Math.random() * 3); // 4 to 6 stains
+    // More stains for variety, scattered
+    const numStains = 6 + Math.floor(Math.random() * 5); // 6 to 10 stains
 
     for (let i = 0; i < numStains; i++) {
         const img = document.createElement('img');
-        // Select random image
         const src = stainImages[Math.floor(Math.random() * stainImages.length)];
         img.src = src;
 
-        // Random styles
-        const size = 150 + Math.random() * 200; // 150px - 350px
+        // Randomize size heavily
+        const size = 60 + Math.random() * 250;
         img.style.width = `${size}px`;
         img.style.height = 'auto';
         img.style.position = 'fixed';
-        img.style.top = `${Math.random() * 90}vh`;
-        img.style.left = `${Math.random() * 90}vw`;
+
+        // Better scattering
+        img.style.top = `${Math.random() * 95}vh`;
+        img.style.left = `${Math.random() * 95}vw`;
+
         img.style.transform = `translate(-50%, -50%) rotate(${Math.random() * 360}deg)`;
         img.style.zIndex = '9999';
         img.style.pointerEvents = 'none';
 
-        // Blend mode for realism
         img.style.mixBlendMode = 'multiply';
-        img.style.opacity = 0.85 + Math.random() * 0.15; // 0.85 - 1.0
+        img.style.opacity = 0.5 + Math.random() * 0.45;
 
         document.body.appendChild(img);
     }

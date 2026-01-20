@@ -1,18 +1,27 @@
 from PIL import Image
 import os
 import glob
+import math
 
-def remove_white_bg(image_path):
+def distance(c1, c2):
+    (r1, g1, b1) = c1[:3]
+    (r2, g2, b2) = c2[:3]
+    return math.sqrt((r1 - r2)**2 + (g1 - g2)**2 + (b1 - b2)**2)
+
+def remove_background(image_path, tolerance=30):
     try:
         img = Image.open(image_path)
         img = img.convert("RGBA")
         datas = img.getdata()
-
+        
+        # Sample the top-left pixel as the background color
+        bg_color = datas[0]
+        
         new_data = []
         for item in datas:
-            # Change all white (also shades of whites)
-            # Find all pixels that are nearly white
-            if item[0] > 240 and item[1] > 240 and item[2] > 240:
+            # Check modification: if the pixel is close to the background color -> transparent
+            # Also checking for pure white just in case
+            if distance(item, bg_color) < tolerance or (item[0] > 240 and item[1] > 240 and item[2] > 240):
                 new_data.append((255, 255, 255, 0))
             else:
                 new_data.append(item)
@@ -28,4 +37,4 @@ target_dir = "/home/meow/Documents/Antigravity/CREAFcoffee/images"
 files = glob.glob(os.path.join(target_dir, "*.png"))
 
 for f in files:
-    remove_white_bg(f)
+    remove_background(f, tolerance=50) # Increased tolerance
