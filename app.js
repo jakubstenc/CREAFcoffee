@@ -562,8 +562,8 @@ function addRandomStains() {
         'images/stain_drip_clean.png'
     ];
 
-    // Reduced count: 2 to 3 stains
-    const numStains = 2 + Math.floor(Math.random() * 2);
+    // Reduced count: 1 to 2 stains (Minimal clutter)
+    const numStains = 1 + Math.floor(Math.random() * 2);
 
     // Store placement data to check for overlap
     const placedStains = [];
@@ -621,7 +621,8 @@ function addRandomStains() {
             img.style.pointerEvents = 'none';
 
             img.style.mixBlendMode = 'multiply';
-            img.style.opacity = 0.5 + Math.random() * 0.45;
+            // Very low opacity for readability (0.15 to 0.4)
+            img.style.opacity = 0.15 + Math.random() * 0.25;
 
             document.body.appendChild(img);
 
