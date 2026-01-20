@@ -547,46 +547,83 @@ function downloadCSV() {
 function addRandomStains() {
     // Add realistic Image-based Coffee Stains
     const stainImages = [
-        // 'images/stain_splatter.png', // Removed: too clumped
-        // 'images/stain_blob.png',    // Removed: too clumped
         'images/stain_ring_light.png',
         'images/stain_ring_broken.png',
-        // 'images/stain_droplet_1.png', // Removed: too clumped
-        // 'images/stain_droplet_2.png', // Removed: too clumped
         'images/stain_ring_messy.png',
         'images/stain_smudge_light.png',
-        // New individual items
         'images/stain_individual_1.png',
         'images/stain_individual_2.png',
-        'images/stain_individual_3.png'
+        // New clean variations
+        'images/stain_cup_ring_clean.png',
+        'images/stain_drip_long.png',
+        'images/stain_splash_tiny.png'
     ];
 
-    // More stains for variety, scattered
-    const numStains = 6 + Math.floor(Math.random() * 5); // 6 to 10 stains
+    // Reduced count: 2 to 3 stains
+    const numStains = 2 + Math.floor(Math.random() * 2);
+
+    // Store placement data to check for overlap
+    const placedStains = [];
 
     for (let i = 0; i < numStains; i++) {
-        const img = document.createElement('img');
-        const src = stainImages[Math.floor(Math.random() * stainImages.length)];
-        img.src = src;
+        // Try to place the stain without overlap (max 10 attempts)
+        let attempts = 0;
+        let validPosition = false;
+        let top, left, size;
 
-        // Randomize size heavily
-        const size = 60 + Math.random() * 250;
-        img.style.width = `${size}px`;
-        img.style.height = 'auto';
-        img.style.position = 'fixed';
+        while (attempts < 10 && !validPosition) {
+            size = 60 + Math.random() * 250;
+            // Position as percentage of viewport
+            const topPct = Math.random() * 90;
+            const leftPct = Math.random() * 90;
 
-        // Better scattering
-        img.style.top = `${Math.random() * 95}vh`;
-        img.style.left = `${Math.random() * 95}vw`;
+            // Check collision
+            let overlap = false;
+            for (const existing of placedStains) {
+                // Simple distance check (approximate)
+                // Convert percentage distance to approximate pixel distance for check
+                const dx = (leftPct - existing.left) * (window.innerWidth / 100);
+                const dy = (topPct - existing.top) * (window.innerHeight / 100);
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const minDistance = (size + existing.size) * 0.45; // slightly more spacing
 
-        img.style.transform = `translate(-50%, -50%) rotate(${Math.random() * 360}deg)`;
-        img.style.zIndex = '9999';
-        img.style.pointerEvents = 'none';
+                if (distance < minDistance) {
+                    overlap = true;
+                    break;
+                }
+            }
 
-        img.style.mixBlendMode = 'multiply';
-        img.style.opacity = 0.5 + Math.random() * 0.45;
+            if (!overlap) {
+                validPosition = true;
+                top = topPct;
+                left = leftPct;
+            }
+            attempts++;
+        }
 
-        document.body.appendChild(img);
+        if (validPosition) {
+            const img = document.createElement('img');
+            const src = stainImages[Math.floor(Math.random() * stainImages.length)];
+            img.src = src;
+
+            img.style.width = `${size}px`;
+            img.style.height = 'auto';
+            img.style.position = 'fixed';
+
+            img.style.top = `${top}vh`;
+            img.style.left = `${left}vw`;
+
+            img.style.transform = `translate(-50%, -50%) rotate(${Math.random() * 360}deg)`;
+            img.style.zIndex = '9999';
+            img.style.pointerEvents = 'none';
+
+            img.style.mixBlendMode = 'multiply';
+            img.style.opacity = 0.5 + Math.random() * 0.45;
+
+            document.body.appendChild(img);
+
+            placedStains.push({ top: top, left: left, size: size });
+        }
     }
 }
 
