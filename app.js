@@ -545,116 +545,38 @@ function downloadCSV() {
 }
 
 function addRandomStains() {
-    // Generate realistic "Organic" SVG Coffee Rings (Bezier Smoothed)
-    // Simulating the look of the 'coffee-stains' LaTeX package
-    const numStains = 3 + Math.floor(Math.random() * 3);
+    // Add realistic Image-based Coffee Stains
+    const stainImages = [
+        'images/stain_splatter.png',
+        'images/stain_blob.png',
+        'images/stain_ring_light.png',
+        'images/stain_ring_broken.png'
+    ];
 
-    // Coffee Colors
-    const darkest = "#3e2723";
-    const dark = "#5d4037";
-    const light = "#795548";
+    const numStains = 4 + Math.floor(Math.random() * 3); // 4 to 6 stains
 
     for (let i = 0; i < numStains; i++) {
-        const size = 220 + Math.random() * 140;
-        const svgNS = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(svgNS, "svg");
+        const img = document.createElement('img');
+        // Select random image
+        const src = stainImages[Math.floor(Math.random() * stainImages.length)];
+        img.src = src;
 
-        svg.setAttribute("width", size);
-        svg.setAttribute("height", size);
-        svg.setAttribute("viewBox", "0 0 100 100");
-        svg.style.position = "fixed";
-        svg.style.top = `${Math.random() * 90}vh`;
-        svg.style.left = `${Math.random() * 90}vw`;
-        svg.style.pointerEvents = "none";
-        svg.style.zIndex = "9999";
-        svg.style.transform = `rotate(${Math.random() * 360}deg)`;
-        svg.style.mixBlendMode = "multiply";
-        svg.style.opacity = "0.9";
+        // Random styles
+        const size = 150 + Math.random() * 200; // 150px - 350px
+        img.style.width = `${size}px`;
+        img.style.height = 'auto';
+        img.style.position = 'fixed';
+        img.style.top = `${Math.random() * 90}vh`;
+        img.style.left = `${Math.random() * 90}vw`;
+        img.style.transform = `translate(-50%, -50%) rotate(${Math.random() * 360}deg)`;
+        img.style.zIndex = '9999';
+        img.style.pointerEvents = 'none';
 
-        // --- Generate Organic Shape using Bezier Curves ---
-        // Instead of jagged lines, we use smooth control points
-        const points = [];
-        const segments = 12; // Fewer segments = smoother loop
-        const baseRadius = 40;
+        // Blend mode for realism
+        img.style.mixBlendMode = 'multiply';
+        img.style.opacity = 0.85 + Math.random() * 0.15; // 0.85 - 1.0
 
-        for (let j = 0; j < segments; j++) {
-            const angle = (j / segments) * Math.PI * 2;
-            const r = baseRadius + (Math.random() * 4 - 2); // Subtle wobble
-            const x = 50 + Math.cos(angle) * r;
-            const y = 50 + Math.sin(angle) * r;
-            points.push({ x, y });
-        }
-
-        // Close the loop
-        points.push(points[0]);
-
-        // Catmull-Rom spline to Bezier conversion for smoothness
-        let d = `M ${points[0].x} ${points[0].y} `;
-        for (let j = 0; j < points.length - 1; j++) {
-            const p0 = points[j == 0 ? points.length - 2 : j - 1];
-            const p1 = points[j];
-            const p2 = points[j + 1];
-            const p3 = points[j + 2 == points.length ? 1 : j + 2];
-
-            // Catmull-Rom to Cubic Bezier
-            const cp1x = p1.x + (p2.x - p0.x) / 6;
-            const cp1y = p1.y + (p2.y - p0.y) / 6;
-            const cp2x = p2.x - (p3.x - p1.x) / 6;
-            const cp2y = p2.y - (p3.y - p1.y) / 6;
-
-            d += `C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y} `;
-        }
-
-        // --- Layer 1: The "Crust" (Sharp, dark, thin edge) ---
-        const pathCrust = document.createElementNS(svgNS, "path");
-        pathCrust.setAttribute("d", d);
-        pathCrust.setAttribute("fill", "none");
-        pathCrust.setAttribute("stroke", darkest);
-        pathCrust.setAttribute("stroke-width", "1.5");
-        pathCrust.setAttribute("stroke-opacity", "0.95");
-        pathCrust.setAttribute("stroke-linecap", "round");
-        // Natural breaks (capillary effect breaks)
-        const dashBase = 100 + Math.random() * 100;
-        pathCrust.setAttribute("stroke-dasharray", `${dashBase} ${10 + Math.random() * 20} ${dashBase / 2} ${5 + Math.random() * 10}`);
-        svg.appendChild(pathCrust);
-
-        // --- Layer 2: The "Wash" (Bleeding edge) ---
-        // Clone the path but make it wider and lighter
-        const pathWash = document.createElementNS(svgNS, "path");
-        pathWash.setAttribute("d", d);
-        pathWash.setAttribute("fill", "none");
-        pathWash.setAttribute("stroke", dark);
-        pathWash.setAttribute("stroke-width", "4"); // Bleed out
-        pathWash.setAttribute("stroke-opacity", "0.3");
-        pathWash.style.filter = "blur(1px)";
-        svg.appendChild(pathWash);
-
-        // --- Layer 3: Inner Stain (The liquid residue) ---
-        // Fill slightly with a gradient or tint
-        const pathFill = document.createElementNS(svgNS, "path");
-        pathFill.setAttribute("d", d);
-        pathFill.setAttribute("fill", light);
-        pathFill.setAttribute("fill-opacity", "0.05"); // Very faint fill
-        pathFill.setAttribute("stroke", "none");
-        svg.appendChild(pathFill);
-
-        // --- Layer 4: Random "Drips" on the ring ---
-        // Add a globule on the ring path itself
-        const numDrips = 1 + Math.floor(Math.random() * 3);
-        for (let k = 0; k < numDrips; k++) {
-            const dripIdx = Math.floor(Math.random() * (points.length - 2));
-            const p = points[dripIdx];
-            const drip = document.createElementNS(svgNS, "circle");
-            drip.setAttribute("cx", p.x + (Math.random() * 2 - 1));
-            drip.setAttribute("cy", p.y + (Math.random() * 2 - 1));
-            drip.setAttribute("r", 2 + Math.random() * 2);
-            drip.setAttribute("fill", darkest);
-            drip.setAttribute("opacity", "0.8");
-            drip.style.filter = "blur(0.5px)";
-            svg.appendChild(drip);
-        }
-
-        document.body.appendChild(svg);
+        document.body.appendChild(img);
     }
 }
 
