@@ -23,20 +23,16 @@ body {
     justify-content: center;
 }
 
-.container {
-    width: 100%;
-    max-width: 480px;
-    /* Mobile first */
-    padding: 20px;
-    background: var(--paper-bg);
-    /* Use the creamy color */
-    /* Slightly opaque to readability over lines */
-    min-height: 100vh;
-    position: relative;
-    border-right: 1px dashed #ccc;
-    border-left: 1px dashed #ccc;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-    /* Subtle depth */
+width: 100%;
+max-width: 480px;
+/* Mobile first */
+padding: 20px;
+background: var(--paper-bg);
+/* Use the creamy color */
+/* Slightly opaque to readability over lines */
+min-height: 100vh;
+position: relative;
+/* Borders and shadow removed for flat look */
 }
 
 /* Typography */
