@@ -3,7 +3,7 @@
     --ink-color: #2c2c2c;
     --line-color: #a4b0be;
     --highlight: #c0392b;
-    --stain-color: rgba(101, 67, 33, 0.12);
+    --stain-color: rgba(80, 50, 40, 0.25);
     --font-heading: 'Special Elite', cursive;
     --font-body: 'Courier Prime', monospace;
 }
@@ -46,12 +46,15 @@ body::before {
     max-width: 480px;
     /* Mobile first */
     padding: 20px;
-    background: rgba(253, 251, 247, 0.9);
+    background: var(--paper-bg);
+    /* Use the creamy color */
     /* Slightly opaque to readability over lines */
     min-height: 100vh;
     position: relative;
     border-right: 1px dashed #ccc;
     border-left: 1px dashed #ccc;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    /* Subtle depth */
 }
 
 /* Typography */
@@ -286,8 +289,9 @@ button#log-supply-btn {
     border-radius: 50%;
     background: radial-gradient(circle, var(--stain-color) 0%, transparent 70%);
     pointer-events: none;
-    z-index: -1;
-    filter: blur(5px);
+    z-index: 1;
+    /* On top of logic */
+    filter: blur(8px);
     opacity: 0.8;
 }
 
