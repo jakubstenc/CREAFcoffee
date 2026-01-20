@@ -212,18 +212,52 @@ function handleAddUser() {
         return;
     }
 
+    // Check for duplicates (case-insensitive)
+    const exists = allUsers.some(u => u.name.toLowerCase() === name.toLowerCase());
+    if (exists) {
+        alert(`User "${name}" already exists. Logging you in...`);
+
+        const existingUser = allUsers.find(u => u.name.toLowerCase() === name.toLowerCase());
+        if (existingUser) {
+            userSelect.value = existingUser.id;
+            currentUser = existingUser;
+
+            // Reset UI
+            newUserInput.value = "";
+            newUserInput.style.display = 'none';
+            userSelect.style.display = 'block';
+            addUserBtn.textContent = "[ + NEW RECRUIT ]";
+
+            updateDashboard();
+            dashboard.classList.remove('hidden');
+        }
+        return;
+    }
+
     db.collection('users').add({
         name: name,
         debt: 0,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then((docRef) => {
         console.log("User added:", docRef.id);
+
+        // AUTO-LOGIN
+        currentUser = { id: docRef.id, name: name, debt: 0 };
+
         // Reset UI
         newUserInput.value = "";
         newUserInput.style.display = 'none';
         userSelect.style.display = 'block';
         addUserBtn.textContent = "[ + NEW RECRUIT ]";
-        alert(`Welcome, ${name}. Select your name from the list.`);
+
+        // Show Dashboard
+        updateDashboard();
+        dashboard.classList.remove('hidden');
+
+        alert(`Welcome, ${name}! You are logged in.`);
+    }).catch(error => {
+        console.error("Error adding user: ", error);
+        alert("System error. Check console.");
     });
 }
 
