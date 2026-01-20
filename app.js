@@ -147,7 +147,7 @@ function setupRealtimeListeners() {
         }
     });
 
-    // 2. Listen to LOGS (for Dynamic Price calculation)
+    // 2. Listen to LOGS (for Stats only, price is now FIXED)
     db.collection('logs').onSnapshot(snapshot => {
         let cups = 0;
         let supplies = 0;
@@ -160,23 +160,14 @@ function setupRealtimeListeners() {
 
         totalCups = cups;
         totalSupplyCost = supplies;
-        recalcPrice();
+        // recalcPrice(); // Disabled dynamic pricing
+        updateDashboard();
     });
 }
 
 function recalcPrice() {
-    // Standard Economics: Price = Total Expenses / Total Cups
-    if (totalCups > 0) {
-        dynamicPrice = totalSupplyCost / totalCups;
-    } else {
-        dynamicPrice = 0.50; // Default if no data
-    }
-
-    // Safety check for NaN or Infinity
-    if (!isFinite(dynamicPrice) || isNaN(dynamicPrice)) {
-        dynamicPrice = 0.50;
-    }
-
+    // FIXED PRICE MODEL as per User Request
+    dynamicPrice = 0.50;
     updateDashboard();
 }
 
