@@ -614,8 +614,8 @@ function addRandomStains() {
             img.style.pointerEvents = 'none';
 
             img.style.mixBlendMode = 'multiply';
-            // Extremely faint for subtle texture (0.05 to 0.25)
-            img.style.opacity = 0.05 + Math.random() * 0.2;
+            // Slightly more visible texture (0.15 to 0.45)
+            img.style.opacity = 0.15 + Math.random() * 0.3;
 
             document.body.appendChild(img);
 
