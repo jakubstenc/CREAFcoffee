@@ -21,24 +21,6 @@ body {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    background-image:
-        linear-gradient(var(--line-color) 1px, transparent 1px);
-    background-size: 100% 1.5rem;
-}
-
-/* Paper Texture and Lines */
-body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: repeating-linear-gradient(transparent,
-            transparent 23px,
-            #e5e5e5 24px);
-    pointer-events: none;
-    z-index: -1;
 }
 
 .container {
