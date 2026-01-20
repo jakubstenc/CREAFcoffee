@@ -283,17 +283,32 @@ button#log-supply-btn {
     margin: 10px 0;
 }
 
-/* Random Stains */
+/* Random Stains (Coffee Rings) */
 .coffee-stain-random {
     position: fixed;
-    border-radius: 50%;
-    background: radial-gradient(circle, var(--stain-color) 0%, transparent 70%);
     pointer-events: none;
     z-index: 9999;
-    /* Force on top */
-    filter: blur(5px);
-    opacity: 0.9;
+    /* Create a hollow ring */
+    background: radial-gradient(closest-side, transparent 75%, var(--stain-color) 85%, var(--stain-color) 100%, transparent);
+    /* Irregular shape */
+    border-radius: 55% 45% 60% 40% / 50% 60% 40% 50%;
+    opacity: 0.8;
     mix-blend-mode: multiply;
+    transform: rotate(random(360deg));
+    /* Note: CSS doesn't support random() directly, handled in JS */
+}
+
+/* Add a second variation for filled blotches if needed, or just rings */
+.coffee-stain-random::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 100%;
+    /* Subtle splatter texture */
+    background-image: radial-gradient(var(--stain-color) 1px, transparent 1px);
+    background-size: 10px 10px;
+    opacity: 0.3;
+    border-radius: inherit;
 }
 
 /* Mobile Adjustments */

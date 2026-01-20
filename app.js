@@ -398,24 +398,31 @@ function downloadCSV() {
 }
 
 function addRandomStains() {
-    // Add 2-5 random circular stains
-    const numStains = 2 + Math.floor(Math.random() * 4);
+    // Add 3-6 random coffee rings
+    const numStains = 3 + Math.floor(Math.random() * 4);
 
     for (let i = 0; i < numStains; i++) {
         const stain = document.createElement('div');
         stain.classList.add('coffee-stain-random');
 
-        // Random size
-        const size = 150 + Math.random() * 200;
+        // Random size (rings are usually smaller than big blotches)
+        const size = 80 + Math.random() * 120;
         stain.style.width = `${size}px`;
         stain.style.height = `${size}px`;
 
-        // Random position (avoid center if possible, but random is random)
-        stain.style.top = `${Math.random() * 100}vh`;
-        stain.style.left = `${Math.random() * 100}vw`;
+        // Random position
+        stain.style.top = `${Math.random() * 90}vh`;
+        stain.style.left = `${Math.random() * 90}vw`;
 
-        // Random irregularity
-        stain.style.borderRadius = `${40 + Math.random() * 20}% ${40 + Math.random() * 20}% ${40 + Math.random() * 20}% ${40 + Math.random() * 20}%`;
+        // Random Rotation
+        stain.style.transform = `rotate(${Math.random() * 360}deg)`;
+
+        // Random irregularity per stain
+        const r1 = 40 + Math.random() * 20;
+        const r2 = 40 + Math.random() * 20;
+        const r3 = 40 + Math.random() * 20;
+        const r4 = 40 + Math.random() * 20;
+        stain.style.borderRadius = `${r1}% ${100 - r1}% ${r3}% ${100 - r3}% / ${r2}% ${r4}% ${100 - r4}% ${100 - r2}%`;
 
         document.body.appendChild(stain);
     }
