@@ -551,7 +551,7 @@ function addRandomStains() {
         // 'images/stain_blob.png',    // Removed: too clumped
         'images/stain_ring_light.png',
         'images/stain_ring_broken.png',
-        'images/stain_droplet_1.png',
+        // 'images/stain_droplet_1.png', // Removed: too clumped
         // 'images/stain_droplet_2.png', // Removed: too clumped
         'images/stain_ring_messy.png',
         'images/stain_smudge_light.png',
