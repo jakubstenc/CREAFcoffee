@@ -28,6 +28,7 @@ let currentUser = null;
 let dynamicPrice = 0.50; // Fallback default
 let totalCups = 0;
 let totalSupplyCost = 0;
+let allUsers = []; // Cache for users
 
 // DOM Elements
 const userSelect = document.getElementById('user-select');
@@ -43,6 +44,9 @@ const logSupplyBtn = document.getElementById('log-supply-btn');
 const supplyAmountInput = document.getElementById('supply-amount');
 const downloadCsvBtn = document.getElementById('download-csv-btn');
 const settleBtn = document.getElementById('settle-btn');
+const payQrBtn = document.getElementById('pay-qr-btn');
+const qrModal = document.getElementById('qr-modal');
+const closeModal = document.querySelector('.close-modal');
 
 // --- Functions ---
 
@@ -56,6 +60,23 @@ function init() {
     logSupplyBtn.addEventListener('click', handleLogSupplies);
     downloadCsvBtn.addEventListener('click', downloadCSV);
     settleBtn.addEventListener('click', handleSettleUp);
+
+    // QR Modal Listeners
+    if (payQrBtn) {
+        payQrBtn.addEventListener('click', () => {
+            qrModal.classList.remove('hidden');
+        });
+    }
+    if (closeModal) {
+        closeModal.addEventListener('click', () => {
+            qrModal.classList.add('hidden');
+        });
+    }
+    window.addEventListener('click', (event) => {
+        if (event.target == qrModal) {
+            qrModal.classList.add('hidden');
+        }
+    });
 }
 
 function setupRealtimeListeners() {
@@ -65,6 +86,7 @@ function setupRealtimeListeners() {
         snapshot.forEach(doc => {
             users.push({ id: doc.id, ...doc.data() });
         });
+        allUsers = users; // Update global cache
         updateUserDropdown(users);
 
         // If current user, update their debt display specifically
@@ -75,10 +97,11 @@ function setupRealtimeListeners() {
                 updateDashboard();
             }
         }
+    }, error => {
+        console.error("Error fetching users:", error);
     });
 
     // 2. Listen to LOGS (for Dynamic Price calculation)
-    // In a large app, this would be an aggregation. For this scale, reading all logs is acceptable.
     db.collection('logs').onSnapshot(snapshot => {
         let cups = 0;
         let supplies = 0;
@@ -96,19 +119,7 @@ function setupRealtimeListeners() {
 }
 
 function recalcPrice() {
-    // P = Total Cups / Total Supply Expenses ??
-    // Wait, the prompt said: "P = Total Cups Consumed / Total Supply Expenses"
-    // Wait, physically: Price per cup should be Expenses / Cups.
-    // Prompt: "Dynamic Price Formula: P = Total Cups Consumed / Total Supply Expenses (€)"
-    // That means if 100 cups and €10 expenses, P = 10. That's a high price.
-    // If it meant "Expenses / Cups", then €10 / 100 cups = €0.10.
-    // CHECK THE PROMPT AGAIN.
-    // "P = Total Cups Consumed Total Supply Expenses (€)" -- the formatting was "P = Fraction".
-    // Usually it's Total Cost / Total Units.
-    // Let's assume standard economics: Price = Total Expenses / Total Cups.
-    // BUT the prompt text says "P=Total Cups ConsumedTotal Supply Expenses (€)". The visual formatting in the prompt implies a fraction.
-    // Let's implement Expenses / Cups because the inverse would be weird (credits) or super expensive.
-
+    // Standard Economics: Price = Total Expenses / Total Cups
     if (totalCups > 0) {
         dynamicPrice = totalSupplyCost / totalCups;
     } else {
@@ -167,22 +178,16 @@ function handleUserLogin(e) {
         newUserInput.focus();
         dashboard.classList.add('hidden');
     } else {
-        // Fetch fresh state? The listener keeps 'currentUser' somewhat stale if we only rely on the array.
-        // Better to set ID and let listener update.
-        currentUser = { id: val, debt: 0 }; // Temporary until listener fills it
+        // Use cached user data
+        const selectedUser = allUsers.find(u => u.id === val);
 
-        // Find in our cached list from listener if possible to avoid flicker
-        // Accessing db.collection('users') users is not global.
-        // We'll rely on the fact that if we selected it, it exists.
-        // Trigger a fetch or just wait for listener?
-        // Let's get the specific doc to be sure.
-        db.collection('users').doc(val).get().then(doc => {
-            if (doc.exists) {
-                currentUser = { id: doc.id, ...doc.data() };
-                updateDashboard();
-                dashboard.classList.remove('hidden');
-            }
-        });
+        if (selectedUser) {
+            currentUser = selectedUser;
+            updateDashboard();
+            dashboard.classList.remove('hidden');
+        } else {
+            console.error("User not found in cache:", val);
+        }
     }
 }
 

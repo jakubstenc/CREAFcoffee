@@ -77,12 +77,27 @@
 
             <div class="settle-section">
                 <button id="settle-btn" class="btn-outline">[ SETTLE UP / STATUS ]</button>
+                <button id="pay-qr-btn" class="btn-outline" style="margin-top: 10px;">[ PAY TAB (QR) ]</button>
             </div>
 
             <div class="export-section">
                 <button id="download-csv-btn" class="btn-link">[ DOWNLOAD DATASET.csv ]</button>
             </div>
         </section>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div id="qr-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>SCAN TO PAY</h2>
+            <div class="qr-placeholder">
+                <!-- Replace with actual QR image later -->
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://revolut.me/placeholder"
+                    alt="Payment QR Code">
+            </div>
+            <p>Scan to send funds to the coffee supply pool.</p>
+        </div>
     </div>
 
     <script src="app.js"></script>
