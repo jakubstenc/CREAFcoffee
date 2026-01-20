@@ -547,8 +547,8 @@ function downloadCSV() {
 function addRandomStains() {
     // Add realistic Image-based Coffee Stains
     const stainImages = [
-        'images/stain_splatter.png',
-        // 'images/stain_blob.png', // Removed: too clumped
+        // 'images/stain_splatter.png', // Removed: too clumped
+        // 'images/stain_blob.png',    // Removed: too clumped
         'images/stain_ring_light.png',
         'images/stain_ring_broken.png',
         'images/stain_droplet_1.png',
